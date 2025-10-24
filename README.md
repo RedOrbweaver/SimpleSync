@@ -13,3 +13,4 @@ Remarks:
 - The synchronizaton time is not counted towards the interval, so in practice the real interval is (synchronization time) + interval.
 - Access denied on the side of the source should not cause any issues, however if access is denied on the destination side the program will exit with an error.
 - Be careful when using any utility that can mass-delete files like this one.
+- Pressing CTRL+C will stop the program once it completes the current synchronization cycle. Pressing it again will force the program to close, potentialy corrupting the files in the destination directory.
