@@ -1,6 +1,6 @@
 # SimpleSync
 
-A simple folder synchronization program.
+A simple folder synchronization utility.
 
 Usage: SimpleSync \<source\> \<destination\> \<check interval in seconds\> \<(optional)path to a log file\>
 
