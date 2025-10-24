@@ -378,22 +378,23 @@ namespace SimpleSync
                 Console.WriteLine($"Outputting logs to {log_file}");
             }
 
-            LogLine($"Synchronizing from {source} into {destination} at every {interval} seconds");
+            LogLine($"Synchronizing from {source} into {destination} every {interval} seconds");
 
-            Console.CancelKeyPress += delegate
+            Console.CancelKeyPress += delegate (object? sender, ConsoleCancelEventArgs args)
             {
+
                 if (cancel_event.WaitOne(0))
                 {
                     LogLine("Exitting forcefully");
-                    System.Environment.Exit(2);
+                    args.Cancel = false;
+                    return;
                 }
+                args.Cancel = true;
                 cancel_event.Set();
                 Console.WriteLine("CTRL+C pressed, closing after operations complete. Press again to force-quit.");
             };
-            Stopwatch stopwatch = new();
             TimeSpan interval_span = TimeSpan.FromSeconds(interval);
-            root = new KnownDirectory() { relative_path = "", source_path = source, destination_path = destination, files = [], files_by_name = [], last_sync_existence = 0 };
-            stopwatch.Start();
+            root = new KnownDirectory() { relative_path = "", source_path = source, destination_path = destination, files = [], files_by_name = [], last_sync_existence = 0 };            
             while (true)
             {
                 if (cancel_event.WaitOne(0))
@@ -401,13 +402,8 @@ namespace SimpleSync
                     LogLine("CTRL+C pressed, exiting gracefully");
                     return 0;
                 }
-                if (stopwatch.Elapsed < interval_span)
-                {
-                    Thread.Sleep(interval_span - stopwatch.Elapsed);
-                }
                 statistics = new Statistics();
                 // Note that the time spent synchronizing does not count, so the real interval between syncs will be greater than commanded
-                stopwatch.Stop();
                 LogLine($"Starting sync #${sync_count} {source} -> {destination} at {DateTime.Now.ToLongDateString()} {DateTime.Now.ToLongTimeString()}");
                 TimeSpan time;
                 try
@@ -426,15 +422,14 @@ namespace SimpleSync
                 }
                 else if (time.TotalSeconds >= interval * 0.5)
                 {
-                    Console.WriteLine("WARNING: Total synchronization time is more than half the synchronizaton interval");
+                    Console.WriteLine("WARNING: Total synchronization time is more than half of the synchronizaton interval");
                 }
                 Console.WriteLine($"Checked {statistics.files_checked} files for {statistics.bytes_checked} bytes in {statistics.directories_checked} directories");
                 Console.WriteLine($"Created {statistics.files_created} files and overrode {statistics.files_overriden} files");
                 Console.WriteLine($"Wrote {statistics.bytes_written} in {statistics.files_changed} files.");
                 Console.WriteLine("");
                 sync_count++;
-                stopwatch.Reset();
-                stopwatch.Start();
+                Thread.Sleep(interval_span);
             }
         }
     }
